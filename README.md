@@ -8,6 +8,8 @@
     DP
     Copyright (C) 2023  王一乐
 
+    This file is a part of DP.
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -19,8 +21,9 @@
     GNU General Public License for more details.
 
     At the same time, Markdown files and other things under this repository
-    are also seemed as `program`, and they follow the GNU General Public
-    License, too.
+    are also seemed as "data of program" (This means we won't write the
+    "copyright" line and a pointer to where the full notice is found at such
+    Markdown files.), but they still follow the GNU General Public License.
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
