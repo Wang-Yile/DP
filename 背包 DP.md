@@ -18,6 +18,8 @@ $$dp_j=\max(dp_j,dp_{j-w_i}+v_i)$$
 
 ### 例题
 
+[P1417 烹调方案](./例题/背包/0-1%20背包/P1417%20烹调方案.md)
+
 [P2871 [USACO07DEC] Charm Bracelet S](./例题/背包/0-1%20背包/P2871%20[USACO07DEC]%20Charm%20Bracelet%20S.md)
 
 ## 多重背包
