@@ -368,6 +368,144 @@ signed main() {
 
 这里都是紫以上的究极 Kth。
 
+[P3157 [CQOI2011] 动态逆序对](https://www.luogu.com.cn/problem/P3157?contestId=149615)
+
+> 题意：给定一个排列，维护每次删除元素前的逆序对个数。
+
+代码
+
+```cpp
+#include <iostream>
+#include <vector>
+
+using namespace std;
+
+int n, m;
+int a[100005];
+int b[100005];
+
+int rt[100005];
+struct node {
+    int ls, rs, val;
+} d[40000005];
+int cnt;
+static inline int clone(int p) {
+    d[++cnt] = d[p];
+    return cnt;
+}
+static inline int insert(int x, int s, int t, int val, int p) {
+    p = clone(p);
+    if (s == t) {
+        d[p].val += val;
+        return p;
+    }
+    int mid = (s + t) >> 1;
+    if (x <= mid) {
+        d[p].ls = insert(x, s, mid, val, d[p].ls);
+    } else {
+        d[p].rs = insert(x, mid + 1, t, val, d[p].rs);
+    }
+    d[p].val = d[d[p].ls].val + d[d[p].rs].val;
+    return p;
+}
+vector<int> rt1, rt2;
+static inline int query(int x, bool op) {
+    int s = 1;
+    int t = n;
+    int ret = 0;
+    while (s != t) {
+        int mid = (s + t) >> 1;
+        if (x <= mid) {
+            if (!op) {
+                for (auto x : rt1) {
+                    ret += d[d[x].rs].val;
+                }
+                for (auto x : rt2) {
+                    ret -= d[d[x].rs].val;
+                }
+            }
+            for (auto &x : rt1) {
+                x = d[x].ls;
+            }
+            for (auto &x : rt2) {
+                x = d[x].ls;
+            }
+            t = mid;
+        } else {
+            if (op) {
+                for (auto x : rt1) {
+                    ret += d[d[x].ls].val;
+                }
+                for (auto x : rt2) {
+                    ret -= d[d[x].ls].val;
+                }
+            }
+            for (auto &x : rt1) {
+                x = d[x].rs;
+            }
+            for (auto &x : rt2) {
+                x = d[x].rs;
+            }
+            s = mid + 1;
+        }
+    }
+    return ret;
+}
+
+static inline int lowbit(int x) {
+    return x & (-x);
+}
+static inline void BIT_insert(int x, int val) {
+    while (x <= n) {
+        rt[x] = insert(val, 1, n, 1, rt[x]);
+        x += lowbit(x);
+    }
+}
+static inline void BIT_erase(int x, int val) {
+    while (x <= n) {
+        rt[x] = insert(val, 1, n, -1, rt[x]);
+        x += lowbit(x);
+    }
+}
+static inline int BIT_query(int l, int r, int k, bool op) {
+    rt1.clear();
+    rt2.clear();
+    for (int i = r; i; i -= lowbit(i)) {
+        rt1.push_back(rt[i]);
+    }
+    for (int i = l - 1; i; i -= lowbit(i)) {
+        rt2.push_back(rt[i]);
+    }
+    return query(k, op);
+}
+
+signed main() {
+#ifndef ONLINE_JUDGE
+    freopen("P3157.in", "r", stdin);
+#endif
+    ios::sync_with_stdio(false);
+    cin.tie(0);
+    cout.tie(0);
+    cin >> n >> m;
+    long long ans = 0;
+    for (int i = 1; i <= n; ++i) {
+        cin >> a[i];
+        b[a[i]] = i;
+        ans += BIT_query(1, i - 1, a[i], 0);
+        BIT_insert(i, a[i]);
+    }
+    while (m--) {
+        cout << ans << endl;
+        int x;
+        cin >> x;
+        ans -= BIT_query(1, b[x] - 1, x, 0);
+        ans -= BIT_query(b[x] + 1, n, x, 1);
+        BIT_erase(b[x], x);
+    }
+    return 0;
+}
+```
+
 [P4278 带插入区间K小值](https://www.luogu.com.cn/problem/P4278)
 
 > 题意：插入；修改；区间 $k$ 小值查询。
@@ -379,6 +517,163 @@ signed main() {
 [P3332 [ZJOI2013] K大数查询](https://www.luogu.com.cn/problem/P3332)
 
 > 题意：维护 $n$ 个可重集合，将 $c$ 加入区间 $[l,r]$ 的所有集合；查询区间 $[l,r]$ 的集合的并集的第 $k$ 大。
+
+**整体二分**
+
+整体二分即同时处理多组询问，减少二分次数。
+
+对于本题，统称询问与修改为操作，设当前处理的操作区间为 $[ql,qr]$，答案区间为 $[l,r]$。
+
+本题的修改操作会影响后面的询问，因此操作的相对顺序不能变。（整体二分类似于归并排序，因此相对顺序是不变的）
+
+1. 如果 $l=r$，那么操作 $[ql,qr]$ 的答案可以确定均为 $l$。
+
+2. 否则，记当前答案区间的中点 $mid=\dfrac{l+r}{2}$，维护一个初始为空的区间线段树：
+
+    - 对于一个修改操作 $(l,r,c)$，如果 $c>mid$，则该操作对答案区间 $(mid,r]$ 有贡献，并将区间线段树的 $[q_i.l,q_i.r]$ 加 $1$；反之，操作对答案区间 $[l,mid]$ 有贡献。
+
+    - 对于一个查询操作 $(l,r,c)$，如果区间线段树的 $[q_i.l,q_i.r]$ 之和大于等于 $q_i.c$，那么这个查询操作的答案的在答案区间 $(mid,r]$；反之，答案在答案区间 $[l,mid]$。
+
+    - 其它操作同普通整体二分。
+
+代码
+
+```cpp
+#include <iostream>
+
+#define int long long
+
+using namespace std;
+
+int n, m;
+struct question {
+    int opt, l, r, c, id;
+} qs[50005], q1[50005], q2[50005];
+int qs_cnt;
+
+int ans[50005];
+
+int d[200005];
+int tag[200005];
+bool reset[200005];
+static inline void pushdown(int s, int t, int p) {
+    if (reset[p]) {
+        tag[p << 1] = tag[p << 1 | 1] = d[p << 1] = d[p << 1 | 1] = 0;
+        reset[p << 1] = reset[p << 1 | 1] = 1;
+        reset[p] = false;
+    }
+    if (tag[p]) {
+        int mid = (s + t) >> 1;
+        d[p << 1] += (mid - s + 1) * tag[p];
+        tag[p << 1] += tag[p];
+        d[p << 1 | 1] += (t - mid) * tag[p];
+        tag[p << 1 | 1] += tag[p];
+        tag[p] = 0;
+    }
+}
+static inline void update(int l, int r, int s, int t, int c, int p) {
+    if (l <= s && r >= t) {
+        d[p] += (t - s + 1) * c;
+        tag[p] += c;
+        return;
+    }
+    int mid = (s + t) >> 1;
+    pushdown(s, t, p);
+    if (l <= mid) {
+        update(l, r, s, mid, c, p << 1);
+    }
+    if (r > mid) {
+        update(l, r, mid + 1, t, c, p << 1 | 1);
+    }
+    d[p] = d[p << 1] + d[p << 1 | 1];
+}
+static inline int query(int l, int r, int s, int t, int p) {
+    if (l <= s && r >= t) {
+        return d[p];
+    }
+    int mid = (s + t) >> 1;
+    int ret = 0;
+    pushdown(s, t, p);
+    if (l <= mid) {
+        ret += query(l, r, s, mid, p << 1);
+    }
+    if (r > mid) {
+        ret += query(l, r, mid + 1, t, p << 1 | 1);
+    }
+    d[p] = d[p << 1] + d[p << 1 | 1];
+    return ret;
+}
+
+static inline void solve(int ql, int qr, int l, int r) {
+    if (l == r) {
+        for (int i = ql; i <= qr; ++i) {
+            if (qs[i].opt == 2) {
+                ans[qs[i].id] = l;
+            }
+        }
+        return;
+    }
+    int mid = (l + r) >> 1;
+    int t1 = 0;
+    int t2 = 0;
+    tag[1] = 0;
+    d[1] = 0;
+    reset[1] = true;
+    for (int i = ql; i <= qr; ++i) {
+        if (qs[i].opt == 1) {
+            if (qs[i].c > mid) {
+                update(qs[i].l, qs[i].r, 1, n, 1, 1);
+                q2[++t2] = qs[i];
+            } else {
+                q1[++t1] = qs[i];
+            }
+        } else {
+            int val = query(qs[i].l, qs[i].r, 1, n, 1);
+            if (qs[i].c > val) {
+                qs[i].c -= val;
+                q1[++t1] = qs[i];
+            } else {
+                q2[++t2] = qs[i];
+            }
+        }
+    }
+    for (int i = 1; i <= t1; ++i) {
+        qs[ql + i - 1] = q1[i];
+    }
+    for (int i = 1; i <= t2; ++i) {
+        qs[ql + t1 + i - 1] = q2[i];
+    }
+    solve(ql, ql + t1 - 1, l, mid);
+    solve(ql + t1, qr, mid + 1, r);
+}
+
+signed main() {
+#ifndef ONLINE_JUDGE
+    freopen("P3332.in", "r", stdin);
+#endif
+    ios::sync_with_stdio(false);
+    cin.tie(0);
+    cout.tie(0);
+    cin >> n >> m;
+    for (int i = 1; i <= m; ++i) {
+        cin >> qs[i].opt >> qs[i].l >> qs[i].r >> qs[i].c;
+        if (qs[i].opt == 2) {
+            qs[i].id = ++qs_cnt;
+        }
+    }
+    solve(1, m, -n, n);
+    for (int i = 1; i <= qs_cnt; ++i) {
+        cout << ans[i] << endl;
+    }
+    return 0;
+}
+```
+
+本题也可以树套树，但我没看懂。
+
+[P3527 [POI2011] MET-Meteors](https://www.luogu.com.cn/problem/P3527)
+
+> 题意：有 $n$
 
 [P4467 [SCOI2007] k短路](https://www.luogu.com.cn/problem/P4467)
 
