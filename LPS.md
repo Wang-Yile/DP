@@ -1,4 +1,4 @@
-# LPS - 最长回文子序列
+# LPS - 最长回文子序列 _[1]_
 
 ## 概念
 
@@ -96,11 +96,60 @@ signed main() {
 
 > 题意：对于给定的两个序列，求它们的**最长公共回文子序列**的长度。$1\le T\le 10,1\le n\le 500$。
 
-[Palindromic Parentheses]()
+[Palindromic Parentheses](https://www.luogu.com.cn/problem/CF1906L)
 
 > 题意：构造一个长度为 $n$ **合法**括号串使得这个串的 LPS 长度为 $k$，或说明无解。$2\le n\le 2000,1\le k\le n$。
 
 The 2023 ICPC Asia Jakarta Regional Contest Problem L. [Problem details on CodeForces.](https://codeforces.com/contest/1906/problem/L)
+
+这里写得比较简单，具体思路可以看我写的题解。
+
+考虑串 `(((...()...)))` 的 LPS 长度为 $\dfrac{n}{2}$；串 `()(((...()...)))` 的 LPS 长度为 $\dfrac{n}{2}+1$；串 `()(((...()/...)))()` 的 LPS 长度为 $\dfrac{n}{2}+2$；……；串 `()()()...()()()` 的 LPS 长度为 $n-1$。
+
+而 $k<\dfrac{n}{2}$ 是无解的，因为一个合法的括号串里 `(` 的个数有 $\dfrac{n}{2}$ 个，这些 `(` 构成一个回文子序列，因此 $k<\dfrac{n}{2}$ 不会成为 LPS，故无解。
+
+$k=n$ 也是无解的，因为一个合法的括号串开头一定是 `(`，结尾一定是 `)`，因此不存在长度为 $n$ 的回文序列。
+
+如果有解，只需保留一个长度为 $2\cdot(n-k)$ 的形如 `(((...()...)))` 的串，剩余的空位由串 `()` 尽量均匀地填补在两侧即可。_[2]_
+
+```cpp
+#include <iostream>
+
+using namespace std;
+
+int n, k;
+
+signed main() {
+    ios::sync_with_stdio(false);
+    cin.tie(0);
+    cout.tie(0);
+    cin >> n >> k;
+    if (k < n / 2 || k == n) {
+        cout << -1 << endl;
+        return 0;
+    }
+    int extra = n - 2 * (n - k); // 剩余的空位长度
+    int cur = 0;                 // 已经输出的串长度
+    for (int i = 1; i <= extra / 4; ++i) {
+        cout << "()";
+        cur += 2;
+    }
+    for (int i = 1; i <= n - k; ++i) {
+        cout << "(";
+        ++cur;
+    }
+    for (int i = 1; i <= n - k; ++i) {
+        cout << ")";
+        ++cur;
+    }
+    while (cur + 2 <= n) {
+        cout << "()";
+        cur += 2;
+    }
+    cout << endl;
+    return 0;
+}
+```
 
 ## 参考文献
 
