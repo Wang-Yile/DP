@@ -673,7 +673,7 @@ signed main() {
 
 [P3527 [POI2011] MET-Meteors](https://www.luogu.com.cn/problem/P3527)
 
-> 题意：有 $n$
+> 题意：有一个长为 $m$ 的环，被染成 $n$ 种颜色。有 $k$ 条线段价值为 $a_i$，问对于每一种颜色，第几条线段覆盖后可以得到总价值不少于 $p_i$。
 
 [P4467 [SCOI2007] k短路](https://www.luogu.com.cn/problem/P4467)
 
@@ -690,3 +690,7 @@ signed main() {
 [P4153 [WC2015] k 小割](https://www.luogu.com.cn/problem/P4153)
 
 > 题意：看不懂。
+
+[P4848 崂山白花蛇草水](https://www.luogu.com.cn/problem/P4848)
+
+> 题意：矩形区域第 $k$ 大，带修。强制在线。
